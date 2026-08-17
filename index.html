@@ -15,33 +15,96 @@
 <meta property="og:image:height" content="720">
 <style>
   * { box-sizing: border-box; }
-  html, body { margin: 0; padding: 0; }
-  body {
-    background: #f7f7f7;
-    color: #1a1a1a;
-    font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+  html, body { margin: 0; padding: 0; background: #eef3f7; }
+  body { font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif; }
+  .page { max-width: 720px; margin: 0 auto; }
+  .screen { position: relative; width: 100%; }
+  .screen.first img { display: block; width: 100%; height: auto; }
+  .screen.second { aspect-ratio: 720 / 1280; overflow: hidden; }
+  .screen.second .base {
+    position: absolute; inset: 0; width: 100%; height: 100%;
+    object-fit: cover; display: block;
   }
-  .wrap { max-width: 640px; margin: 0 auto; padding: 24px 18px 48px; }
-  .card {
-    background: #fff;
-    border-radius: 12px;
-    padding: 20px 18px;
-    box-shadow: 0 2px 12px rgba(0,0,0,0.04);
+  .carousel {
+    position: absolute; left: 6%; top: 16%; width: 88%;
+    aspect-ratio: 1300 / 1718; overflow: hidden;
   }
-  h1 { margin: 0 0 10px; font-size: 22px; line-height: 1.45; font-weight: 700; }
-  .meta { margin: 0 0 18px; color: #999; font-size: 13px; }
-  img { display: block; width: 100%; border-radius: 10px; }
-  .note { margin: 16px 0 0; color: #aaa; font-size: 12px; text-align: center; }
+  .track { display: flex; width: 300%; height: 100%; transition: transform .42s ease; }
+  .slide { flex: 0 0 33.333333%; height: 100%; }
+  .slide img { width: 100%; height: 100%; object-fit: contain; display: block; -webkit-user-drag: none; }
+  .nav {
+    position: absolute; top: 48.7%; transform: translateY(-50%);
+    width: 40px; height: 40px; border-radius: 50%;
+    border: 1px solid rgba(255,255,255,.65); background: rgba(255,255,255,.22);
+    color: #fff; font-size: 24px; line-height: 1; cursor: pointer;
+    display: flex; align-items: center; justify-content: center; padding: 0;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .nav:active { background: rgba(255,255,255,.4); }
+  .nav.prev { left: 3%; }
+  .nav.next { right: 3%; }
+  .hint {
+    position: absolute; left: 0; right: 0; top: 83%;
+    text-align: center; color: #fff; font-size: 13px; letter-spacing: 1px;
+    opacity: .9; text-shadow: 0 1px 2px rgba(0,0,0,.15);
+  }
 </style>
 </head>
 <body>
-<div class="wrap">
-  <div class="card">
-    <h1>鸣鸣很忙 · 欢迎来到玩具城</h1>
-    <p class="meta">省钱就逛鸣鸣很忙</p>
-    <img src="combined.gif" alt="鸣鸣很忙 · 欢迎来到玩具城 动图">
-    <p class="note">动图较大，加载会稍慢，请稍等片刻</p>
-  </div>
+<div class="page">
+  <section class="screen first">
+    <img src="assets/hero.gif" alt="首屏">
+  </section>
+  <section class="screen second">
+    <img class="base" src="assets/base.webp" alt="">
+    <div class="carousel" id="carousel">
+      <div class="track" id="track">
+        <div class="slide"><img src="assets/card1.webp" alt="轮换素材1"></div>
+        <div class="slide"><img src="assets/card2.webp" alt="轮换素材2"></div>
+        <div class="slide"><img src="assets/card3.webp" alt="轮换素材3"></div>
+      </div>
+    </div>
+    <button class="nav prev" id="prev" aria-label="上一个">‹</button>
+    <button class="nav next" id="next" aria-label="下一个">›</button>
+    <div class="hint">← 左右滑动查看 →</div>
+  </section>
 </div>
+<script>
+  (function () {
+    var track = document.getElementById('track');
+    var carousel = document.getElementById('carousel');
+    var slides = track.children.length;
+    var idx = 0;
+    var auto = null;
+
+    function render() {
+      track.style.transform = 'translateX(' + (-idx * 100 / 3) + '%)';
+    }
+    function go(i) { idx = (i + slides) % slides; render(); }
+    function next() { go(idx + 1); }
+    function prev() { go(idx - 1); }
+    function stopAuto() { if (auto) { clearInterval(auto); auto = null; } }
+
+    auto = setInterval(next, 1000);
+
+    document.getElementById('next').addEventListener('click', function () { stopAuto(); next(); });
+    document.getElementById('prev').addEventListener('click', function () { stopAuto(); prev(); });
+
+    var sx = 0, sy = 0;
+    carousel.addEventListener('touchstart', function (e) {
+      sx = e.touches[0].clientX; sy = e.touches[0].clientY;
+    }, { passive: true });
+    carousel.addEventListener('touchend', function (e) {
+      var dx = e.changedTouches[0].clientX - sx;
+      var dy = e.changedTouches[0].clientY - sy;
+      if (Math.abs(dx) > 40 && Math.abs(dx) > Math.abs(dy)) {
+        stopAuto();
+        if (dx < 0) { next(); } else { prev(); }
+      }
+    }, { passive: true });
+
+    render();
+  })();
+</script>
 </body>
 </html>
